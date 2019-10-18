@@ -20,13 +20,14 @@ def isFixMinimum(cmStatus):
     return True
 
 # check that success and out of gas error have exactly same gas
-def isSameGas(cmStatus):
-    gas = 0
+def isOneGasFail(cmStatus):
+    oneFail = False
     for item in cmStatus:
-        if(gas == 0):
-            gas = item[1]
-            continue
-        if(gas != item[1]):
+        if(oneFail == True and item[0] == 'G'):
+            return False
+        if(item[0] == 'G'):
+            oneFail = True
+        if(oneFail == True and item[1] != item[2]):
             return False
     return True
 
@@ -47,10 +48,10 @@ def isStatic(cmStatus):
     else: return False #dynamic
     
 def checkType(cmStatus):
-    if(isOnlyOutOfGas(cmStatus)): return('Only_Out_of_gas')
+    if(isOnlyOutOfGas(cmStatus)): return('Only_out_of_gas')
     elif(isNeverSuccess(cmStatus)): return('Never_Success')
     elif(isFixMinimum(cmStatus)): return('Fix_minimum')
-    elif(isSameGas(cmStatus)): return('Same_gas')
+    elif(isOneGasFail(cmStatus)): return('One_gas_fail')
     else: return('uncategorized')
 
 def checkAllType(data):

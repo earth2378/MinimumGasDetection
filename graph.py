@@ -35,29 +35,29 @@ def seperateTxStatus(csv_reader):
         elif(item[0] == 'J'): j.append(int(item[1]))
     return (g,s,r,i,j)
 
-def saveGraph(cmTmp,index,fig,dst):
+def saveGraph(cm,index,fig,dst):
     dst = dst + 'All\\'
     util.createDirectory(dst)
-    fileName = str(index) + '_' + cmTmp[0] + '_' + cmTmp[1] + '.png'
+    fileName = str(index) + '_' + cm[0] + '_' + cm[1] + '.png'
     picDst = dst + fileName
     fig.savefig(picDst)
 
-def saveGraphByMethod(cmTmp,index,fig,dst):
-    dst = dst + 'byMethod\\' + cmTmp[1]
+def saveGraphByMethod(cm,index,fig,dst):
+    dst = dst + 'byMethod\\' + cm[1]
     util.createDirectory(dst)
-    fileName = str(index) + '_' + cmTmp[0] + '_' + cmTmp[1] + '.png'
+    fileName = str(index) + '_' + cm[0] + '_' + cm[1] + '.png'
     picDst = dst + '\\' + fileName
     fig.savefig(picDst)
 
-def saveGraphByType(cmTmp,index,fig,dst,typee):
+def saveGraphByType(cm,index,fig,dst,typee):
     dst = dst + 'byType\\' + typee
     util.createDirectory(dst)
-    fileName = str(index) + '_' + cmTmp[0] + '_' + cmTmp[1] + '.png'
+    fileName = str(index) + '_' + cm[0] + '_' + cm[1] + '.png'
     picDst = dst + '\\' + fileName
     fig.savefig(picDst)
 
-def plotTxStatusGraph(fig,cmTmp,xlog=False,ylog=False,cumulative=True,split=False):
-    file = 'cm\\' +  cmTmp[0] + '_' + cmTmp[1] + '.csv'
+def plotTxStatusGraph(fig,cm,xlog=False,ylog=False,cumulative=True,split=False):
+    file = 'cm\\' +  cm[0] + '_' + cm[1] + '.csv'
     csv_file = open(file, 'r')
     csv_reader = csv.reader(csv_file, delimiter=',')
 
@@ -81,30 +81,31 @@ def plotTxStatusGraph(fig,cmTmp,xlog=False,ylog=False,cumulative=True,split=Fals
     fig.legend()
     fig.set_xlabel('Gas')
     fig.set_ylabel('Count')
-    fig.title.set_text('Success Rate_'+str(cmTmp))
+    fig.title.set_text('Success Rate_'+str(cm))
     if (xlog):fig.set_xscale('log')
     if (ylog and not split):fig.set_yscale('log')
     csv_file.close()  
 
-def plotSuccessRateGraph(fig,cmTmp,xlog=False,ylog=False):
-    file = 'cm\\' +  cmTmp[0] + '_' + cmTmp[1] + '.csv'
+def plotSuccessRateGraph(fig,cm,xlog=False,ylog=False):
+    file = 'cm\\' +  cm[0] + '_' + cm[1] + '.csv'
     csv_file = open(file, 'r')
     csv_reader = csv.reader(csv_file, delimiter=',')
     goh,soh = mg.overheadTx(csv_reader)
     rate = mg.successFromOH(goh,soh)
     
-    fig.scatter(goh[0], rate, s=1, linewidth=1, color='black', label="rate")
+    
     fig.grid()
+    fig.scatter(goh[0], rate, s=2, alpha=1, color='#006400', label="Success rate")
     fig.legend()
     fig.set_xlabel('Gas')
     fig.set_ylabel('Success Rate (%)')
-    fig.title.set_text('Success Rate_'+str(cmTmp))
+    fig.title.set_text('Success Rate_'+str(cm))
     if (xlog):fig.set_xscale('log')
     if (ylog):fig.set_yscale('log')
     csv_file.close()  
 
-def plotTimestampGraph(fig,cmTmp,xlog=False,ylog=False):
-    file = 'cmt_filter\\' +  cmTmp[0] + '_' + cmTmp[1] + '.csv'
+def plotTimestampGraph(fig,cm,xlog=False,ylog=False):
+    file = 'cmt_filter\\' +  cm[0] + '_' + cm[1] + '.csv'
     csv_file = open(file, 'r')
     csv_reader = csv.reader(csv_file, delimiter=',')
     gg,gt,sg,st = [],[],[],[]
@@ -142,25 +143,28 @@ def plotTimestampGraph(fig,cmTmp,xlog=False,ylog=False):
     csv_file.close()
 
 
-def plotAll(cmTmp,data,index,dst='cmPic2\\Step\\',xlog=False,ylog=False,cumulative=True,split=False):
-    #opne contract method file
-    fig, axs = plt.subplots(2, 2,figsize=(20,20))
-    for ax in axs[1, :]:
-        ax.remove()
-    gs = axs[1, 1].get_gridspec()
-    axs_2 = fig.add_subplot(gs[1,: ])
-
-    plotTxStatusGraph(axs[0,0],cmTmp,xlog,ylog,cumulative,split)
-    plotSuccessRateGraph(axs[0,1],cmTmp,xlog,ylog)
-    plotTimestampGraph(axs_2,cmTmp,xlog,ylog)
+def plotAll(cm,txStatus,index,dst,xlog=False,ylog=False,cumulative=True,split=False):
+    if(dst == 'cmPic2\\Step\\'):
+        fig, axs = plt.subplots(1, 2,figsize=(20,10))
+        plotTxStatusGraph(axs[0],cm,xlog,ylog,cumulative,split)
+        plotSuccessRateGraph(axs[1],cm,xlog,ylog)
+    if(dst == 'cmPic3\\Step\\'):
+        fig, axs = plt.subplots(2, 2,figsize=(20,20))
+        for ax in axs[1, :]:
+            ax.remove()
+        gs = axs[1, 1].get_gridspec()
+        axs_2 = fig.add_subplot(gs[1,: ])
+        plotTxStatusGraph(axs[0,0],cm,xlog,ylog,cumulative,split)
+        plotSuccessRateGraph(axs[0,1],cm,xlog,ylog)
+        plotTimestampGraph(axs_2,cm,xlog,ylog)
     
-    util.createDirectory('cmPic3\\Step\\byMethod')
-    util.createDirectory('cmPic3\\Step\\byType')
-    saveGraph(cmTmp,index,fig,dst)
-    saveGraphByType(cmTmp,index,fig,dst,cat.checkType(data[cmTmp]))
-    saveGraphByMethod(cmTmp,index,fig,dst)
+    
+    saveGraph(cm,index,fig,dst)
+    saveGraphByType(cm,index,fig,dst,cat.checkType(txStatus))
+    saveGraphByMethod(cm,index,fig,dst)
     plt.clf()
     plt.close()
+
     return True
 
 def cmSelect(index,data):
